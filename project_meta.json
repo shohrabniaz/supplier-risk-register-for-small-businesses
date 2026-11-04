@@ -1,10 +1,17 @@
 {
-  "seq": 51,
   "title": "Supplier Risk Register for Small Businesses",
+  "old_slug": "supplier-risk-register-for-small-businesses",
   "slug": "supplier-risk-register-for-small-businesses",
   "folder": "Supplier_Risk_Register_For_Small_Businesses",
   "kind": "general",
-  "body_words": 241,
+  "body_words": 302,
+  "source": "MICT Academic",
   "project_id": "Academic Project 45",
-  "source": "MICT Academic"
+  "public": {
+    "public_ok": true,
+    "tier": "public-ok",
+    "reasons": [
+      "Showcase-ready design pack with labelled synthetic baseline"
+    ]
+  }
 }
