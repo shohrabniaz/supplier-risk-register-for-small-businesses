@@ -1,0 +1,19 @@
+{
+  "title": "Supplier Risk Register for Small Businesses",
+  "seq": 51,
+  "kind": "general",
+  "mode": "SyntheticBaseline",
+  "generatedUtc": "2026-11-04T17:32:14.549222+00:00",
+  "author": "Md Shohrab Hossen Niaz",
+  "notes": "Baseline evidence model for portfolio reproducibility. Live lab evidence may be added later without renaming the repo.",
+  "artefacts": [
+    "problem framing",
+    "solution design",
+    "evaluation plan"
+  ],
+  "scoreModel": {
+    "baselineMaturity": 42,
+    "targetMaturity": 70,
+    "unit": "0-100 design-coverage index"
+  }
+}
