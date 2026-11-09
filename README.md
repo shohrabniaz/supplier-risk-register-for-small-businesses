@@ -58,7 +58,7 @@ python -m src.cli run
 python tests\test_smoke.py
 ```
 
-Domain engine kind: `general`.
+Domain engine kind: `governance`.
 
 **Author:** Md Shohrab Hossen Niaz  
 **GitHub:** `supplier-risk-register-for-small-businesses`

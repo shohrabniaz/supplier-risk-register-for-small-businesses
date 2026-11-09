@@ -1,71 +1,45 @@
 from __future__ import annotations
+import csv
 import json
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from pathlib import Path
-from uuid import uuid4
 
 @dataclass
-class Record:
-    id: str
+class ControlResult:
+    control_id: str
     title: str
-    status: str = "open"
-    meta: dict = field(default_factory=dict)
+    score: int
+    max_score: int
+    status: str
+    evidence: str
 
-class Store:
-    def __init__(self, path: Path):
-        self.path = path
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        if not self.path.exists():
-            self._write([])
+def load_controls(path: Path) -> list[dict]:
+    with path.open(newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
 
-    def _read(self) -> list[dict]:
-        return json.loads(self.path.read_text(encoding="utf-8"))
+def evaluate(controls: list[dict]) -> list[ControlResult]:
+    out = []
+    for c in controls:
+        score = int(c.get("score", 0))
+        mx = int(c.get("max_score", 100))
+        status = "pass" if score >= int(c.get("pass_threshold", 70)) else "gap"
+        out.append(ControlResult(c["control_id"], c["title"], score, mx, status, c.get("evidence", "")))
+    return out
 
-    def _write(self, rows: list[dict]) -> None:
-        self.path.write_text(json.dumps(rows, indent=2), encoding="utf-8")
-
-    def list(self) -> list[dict]:
-        return self._read()
-
-    def add(self, title: str, status: str = "open", **meta) -> dict:
-        rows = self._read()
-        rec = asdict(Record(id=str(uuid4())[:8], title=title, status=status, meta=meta))
-        rows.append(rec)
-        self._write(rows)
-        return rec
-
-    def set_status(self, rec_id: str, status: str) -> dict | None:
-        rows = self._read()
-        for r in rows:
-            if r["id"] == rec_id:
-                r["status"] = status
-                self._write(rows)
-                return r
-        return None
-
-    def summary(self) -> dict:
-        rows = self._read()
-        by: dict[str, int] = {}
-        for r in rows:
-            by[r["status"]] = by.get(r["status"], 0) + 1
-        return {"total": len(rows), "by_status": by, "records": rows}
-
-def seed(store: Store, seed_path: Path) -> None:
-    if store.list():
-        return
-    seeds = json.loads(seed_path.read_text(encoding="utf-8"))
-    for s in seeds:
-        store.add(s["title"], s.get("status", "open"), **s.get("meta", {}))
+def summarise(results: list[ControlResult]) -> dict:
+    total = sum(r.score for r in results)
+    mx = sum(r.max_score for r in results) or 1
+    gaps = [r.control_id for r in results if r.status == "gap"]
+    return {
+        "coverage_percent": round(100.0 * total / mx, 1),
+        "control_count": len(results),
+        "gap_count": len(gaps),
+        "gaps": gaps,
+        "results": [asdict(r) for r in results],
+    }
 
 def run(data_dir: Path, out_dir: Path) -> dict:
-    store = Store(out_dir / "records.json")
-    seed(store, data_dir / "seed_records.json")
-    rows = store.list()
-    if rows:
-        store.set_status(rows[0]["id"], "in_progress")
-        if len(rows) > 1:
-            store.set_status(rows[1]["id"], "done")
-    summary = store.summary()
+    summary = summarise(evaluate(load_controls(data_dir / "controls.csv")))
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "service_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (out_dir / "assessment_report.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
